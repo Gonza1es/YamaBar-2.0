@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
+@CrossOrigin("http://localhost:3000")
 public class AdminController {
     private final ProductService productService;
 
@@ -36,14 +37,25 @@ public class AdminController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> saveProduct(@RequestPart(value = "file", required = false) MultipartFile file,
-                                         @RequestPart("newProduct") Product product) {
+    public ResponseEntity<?> saveProduct(@RequestBody Product product) {
         try {
-            productService.saveProduct(product, file);
-            return new ResponseEntity<>(new MessageResponse("Product saved"), HttpStatus.CREATED);
+            productService.saveProduct(product);
+            return new ResponseEntity<>(new MessageResponse("Product saved"), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new MessageResponse("Error on the server, something went wrong."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/saveImage/{id}")
+    public ResponseEntity<?> saveImageForProduct(@RequestParam MultipartFile file,
+                                                 @PathVariable Long id) {
+        try {
+            Long responseImageID = productService.saveImageForProduct(id, file);
+            return ResponseEntity.ok(responseImageID);
+        } catch (IOException e) {
+            return new ResponseEntity<>(new MessageResponse("Error on the server, something went wrong."), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     @PostMapping("/delete/{id}")
@@ -54,10 +66,9 @@ public class AdminController {
 
     @PostMapping("/edit/{id}")
     public ResponseEntity<MessageResponse> editProduct(@PathVariable Long id,
-                                         @RequestPart(value = "file", required = false) MultipartFile file,
-                                         @RequestPart("newProduct") Product product) {
+                                         @RequestBody Product product) {
         try {
-            productService.editProduct(id, product, file);
+            productService.editProduct(id, product);
             return new ResponseEntity<>(new MessageResponse("Edited"), HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(new MessageResponse("Error on the server, something went wrong."), HttpStatus.INTERNAL_SERVER_ERROR);

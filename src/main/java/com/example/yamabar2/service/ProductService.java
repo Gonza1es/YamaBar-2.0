@@ -43,26 +43,13 @@ public class ProductService {
         return productDTOList;
     }
 
-    public void saveProduct(Product product, MultipartFile file) throws IOException {
-        if (file != null ) {
-            if (file.getSize() != 0) {
-                Image image = toEntityImage(file);
-                product.addImageToProduct(image);
-                Product productFromDB = productRepository.save(product);
-                productFromDB.setImageId(productFromDB.getImages().get(0).getId());
-            }
-        }
+    public void saveProduct(Product product) throws IOException {
         productRepository.save(product);
     }
 
-
-    public void editProduct(Long id, Product product, MultipartFile file) throws IOException {
+    public Long saveImageForProduct(Long id, MultipartFile file) throws IOException {
         Product productFromDB = productRepository.findById(id).orElse(null);
         if (productFromDB != null) {
-            productFromDB.setType(product.getType());
-            productFromDB.setName(product.getName());
-            productFromDB.setPrice(product.getPrice());
-            productFromDB.setDescription(product.getDescription());
             if (file != null) {
                 if (file.getSize() != 0 && file.getSize() < 1048576L) {
                     if (productFromDB.getImages().isEmpty()) {
@@ -78,11 +65,12 @@ public class ProductService {
             }
             productRepository.save(productFromDB);
         }
+        return productRepository.findById(id).get().getImageId();
     }
 
     private Image setEntityImage(Product product, MultipartFile file) throws IOException {
         Image image = imageRepository.findById(product.getImageId()).orElse(null);
-        if (image !=null) {
+        if (image != null) {
             image.setName(file.getName());
             image.setOriginalFileName(file.getOriginalFilename());
             image.setContentType(file.getContentType());
@@ -90,6 +78,18 @@ public class ProductService {
             image.setImageBytes(file.getBytes());
         }
         return image;
+    }
+
+
+    public void editProduct(Long id, Product product) throws IOException {
+        Product productFromDB = productRepository.findById(id).orElse(null);
+        if (productFromDB != null) {
+            productFromDB.setType(product.getType());
+            productFromDB.setName(product.getName());
+            productFromDB.setPrice(product.getPrice());
+            productFromDB.setDescription(product.getDescription());
+            productRepository.save(productFromDB);
+        }
     }
 
     public HttpStatus deleteProduct(Long id) {
