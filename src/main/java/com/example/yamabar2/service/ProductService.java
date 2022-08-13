@@ -5,6 +5,8 @@ import com.example.yamabar2.entity.Image;
 import com.example.yamabar2.entity.Product;
 import com.example.yamabar2.repository.ImageRepository;
 import com.example.yamabar2.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 
 @Service
 public class ProductService {
+    public static final Logger LOG = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
     private final ImageRepository imageRepository;
@@ -30,21 +33,29 @@ public class ProductService {
         List<Product> productList = productRepository.findAll();
         List<ProductDTO> productDTOList = new ArrayList<>();
         for (Product product : productList) {
-            ProductDTO productDTO = new ProductDTO();
-            productDTO.setId(product.getId());
-            productDTO.setType(product.getType());
-            productDTO.setName(product.getName());
-            productDTO.setPrice(product.getPrice());
-            productDTO.setDescription(product.getDescription());
-            productDTO.setImageId(product.getImageId());
-
-            productDTOList.add(productDTO);
+            productDTOList.add(convertProduct(product));
         }
         return productDTOList;
     }
 
-    public void saveProduct(Product product) throws IOException {
-        productRepository.save(product);
+    public ProductDTO convertProduct(Product product) {
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(product.getId());
+        productDTO.setType(product.getType());
+        productDTO.setName(product.getName());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setImageId(product.getImageId());
+
+        return productDTO;
+    }
+
+    public ProductDTO saveProduct(Product product) throws IOException {
+       productRepository.save(product);
+
+       Product productFromDB = productRepository.save(product);
+
+       return convertProduct(productFromDB);
     }
 
     public Long saveImageForProduct(Long id, MultipartFile file) throws IOException {
@@ -52,15 +63,16 @@ public class ProductService {
         if (productFromDB != null) {
             if (file != null) {
                 if (file.getSize() != 0 && file.getSize() < 1048576L) {
-                    if (productFromDB.getImages().isEmpty()) {
+                    if (!productFromDB.getImages().isEmpty()) {
+                        imageRepository.deleteById(productFromDB.getImageId());
+                        LOG.info("Image deleted");
+                        productFromDB.getImages().clear();
+                        LOG.info("Array of images clear");
+                    }
                         Image image = toEntityImage(file);
                         productFromDB.addImageToProduct(image);
                         Product editProduct = productRepository.save(productFromDB);
                         editProduct.setImageId(editProduct.getImages().get(0).getId());
-                    } else {
-                        Image image = setEntityImage(productFromDB, file);
-                        imageRepository.save(image);
-                    }
                 }
             }
             productRepository.save(productFromDB);

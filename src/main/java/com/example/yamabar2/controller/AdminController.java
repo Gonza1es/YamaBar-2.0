@@ -39,8 +39,8 @@ public class AdminController {
     @PostMapping("/create")
     public ResponseEntity<?> saveProduct(@RequestBody Product product) {
         try {
-            productService.saveProduct(product);
-            return new ResponseEntity<>(new MessageResponse("Product saved"), HttpStatus.OK);
+            ProductDTO productDTO = productService.saveProduct(product);
+            return new ResponseEntity<>(productDTO, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new MessageResponse("Error on the server, something went wrong."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
