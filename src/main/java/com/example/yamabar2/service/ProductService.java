@@ -63,21 +63,20 @@ public class ProductService {
         if (productFromDB != null) {
             if (file != null) {
                 if (file.getSize() != 0 && file.getSize() < 1048576L) {
-                    if (!productFromDB.getImages().isEmpty()) {
-                        imageRepository.deleteById(productFromDB.getImageId());
-                        LOG.info("Image deleted");
-                        productFromDB.getImages().clear();
-                        LOG.info("Array of images clear");
-                    }
+                    if (productFromDB.getImages().isEmpty()) {
                         Image image = toEntityImage(file);
                         productFromDB.addImageToProduct(image);
                         Product editProduct = productRepository.save(productFromDB);
                         editProduct.setImageId(editProduct.getImages().get(0).getId());
+                    } else {
+                        Image image = setEntityImage(productFromDB, file);
+                        imageRepository.save(image);
+                    }
                 }
             }
             productRepository.save(productFromDB);
         }
-        return productRepository.findById(id).get().getImageId();
+        return productRepository.findById(id).get().getImageId() + 1;
     }
 
     private Image setEntityImage(Product product, MultipartFile file) throws IOException {
