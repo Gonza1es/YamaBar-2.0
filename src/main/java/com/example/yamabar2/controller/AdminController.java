@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
-@CrossOrigin("http://localhost:3000")
+@CrossOrigin
 public class AdminController {
     private final ProductService productService;
 
@@ -33,7 +33,7 @@ public class AdminController {
 
         return productList != null && !productList.isEmpty()
                 ? new ResponseEntity<>(productList, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                : new ResponseEntity<>(productList, HttpStatus.NOT_FOUND);
     }
 
     @PostMapping("/create")
@@ -56,6 +56,12 @@ public class AdminController {
             return new ResponseEntity<>(new MessageResponse("Error on the server, something went wrong."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @PostMapping("/deleteImage/{id}")
+    public ResponseEntity<?> deleteImageFromProduct(@PathVariable Long id) {
+        productService.deleteImage(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/delete/{id}")

@@ -15,7 +15,7 @@ import java.io.ByteArrayInputStream;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin("http://localhost:3000")
+@CrossOrigin
 public class ImageController {
     private final ImageRepository imageRepository;
 

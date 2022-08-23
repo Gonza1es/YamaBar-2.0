@@ -1,7 +1,6 @@
 package com.example.yamabar2.entity;
 
 import lombok.Data;
-import net.minidev.json.annotate.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -26,6 +25,6 @@ public class Product {
 
     public void addImageToProduct(Image image) {
         image.setProduct(this);
-        images.add(image);
+        images.add(0, image);
     }
 }

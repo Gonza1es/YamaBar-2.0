@@ -63,32 +63,18 @@ public class ProductService {
         if (productFromDB != null) {
             if (file != null) {
                 if (file.getSize() != 0 && file.getSize() < 1048576L) {
-                    if (productFromDB.getImages().isEmpty()) {
+                    if (!productFromDB.getImages().isEmpty()) {
+                        deleteImage(id);
+                    }
                         Image image = toEntityImage(file);
                         productFromDB.addImageToProduct(image);
                         Product editProduct = productRepository.save(productFromDB);
                         editProduct.setImageId(editProduct.getImages().get(0).getId());
-                    } else {
-                        Image image = setEntityImage(productFromDB, file);
-                        imageRepository.save(image);
-                    }
                 }
             }
             productRepository.save(productFromDB);
         }
-        return productRepository.findById(id).get().getImageId() + 1;
-    }
-
-    private Image setEntityImage(Product product, MultipartFile file) throws IOException {
-        Image image = imageRepository.findById(product.getImageId()).orElse(null);
-        if (image != null) {
-            image.setName(file.getName());
-            image.setOriginalFileName(file.getOriginalFilename());
-            image.setContentType(file.getContentType());
-            image.setSize(file.getSize());
-            image.setImageBytes(file.getBytes());
-        }
-        return image;
+        return productRepository.findById(id).get().getImageId();
     }
 
 
@@ -124,4 +110,13 @@ public class ProductService {
         return image;
     }
 
+    public void deleteImage(Long id) {
+        Product productFromDB = productRepository.findById(id).orElse(null);
+        if (productFromDB != null) {
+            productFromDB.getImages().clear();
+            imageRepository.deleteById(productFromDB.getImageId());
+            productFromDB.setImageId(null);
+            productRepository.save(productFromDB);
+        }
+    }
 }
